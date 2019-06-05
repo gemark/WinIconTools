@@ -150,7 +150,7 @@ func TestCreateWinIcon(t *testing.T) {
 				"D:\\go_project\\src\\WinIconTools\\testico\\vkico32x32@32bit.bmp",
 				"D:\\go_project\\src\\WinIconTools\\testico\\vkico40x40@32bit.bmp",
 				"D:\\go_project\\src\\WinIconTools\\testico\\vkico64x64@32bit.bmp",
-				"D:\\go_project\\src\\WinIconTools\\testico\\vkico256x256@32bit.png",
+				"D:\\go_project\\src\\WinIconTools\\testico\\vkico256x256@32bit.bmp",
 			}},
 			nil,
 			false,
@@ -178,7 +178,7 @@ func TestCreateWinIcon(t *testing.T) {
 					strings.Join(strings.Split(string(tb[11:19]), ":"), ""),
 				)
 			}()
-			got.WriteIcoFile("../testico", Time+".ico")
+			got.WriteIcoFile("../", Time+".ico")
 		})
 	}
 }
