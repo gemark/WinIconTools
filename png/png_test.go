@@ -16,7 +16,6 @@
 package png
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -31,8 +30,21 @@ func TestPNGImage_LoadPNGFile(t *testing.T) {
 	ipng := New()
 	e = ipng.LoadPNGFile(f)
 	if e != nil {
-		t.Logf("TestPNGImage_LoadPNGFile() = %v", e)
+		t.Errorf("TestPNGImage_LoadPNGFile() = %v", e)
 	}
-	fmt.Println(len(ipng.IDAT))
-	fmt.Println(len(ipng.Chunks))
+	ihdr, e := ipng.GetPNGIHDR()
+	if e != nil {
+		t.Errorf("GetPNGIHDR() = %v", e)
+	}
+	t.Logf("width:%v\nheight:%v\nbitsDepth:%v\n"+
+		"colorType:%v\ncompressionMethod:%v\n"+
+		"filterMethod:%v\ninterlaceMethod:%v\n",
+		ihdr.GetWidth(),
+		ihdr.GetHeight(),
+		ihdr.GetBits(),
+		ihdr.GetColorType(),
+		ihdr.GetCompressionMethod(),
+		ihdr.GetFilterMethod(),
+		ihdr.GetInterlaceMethod(),
+	)
 }
