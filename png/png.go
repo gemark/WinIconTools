@@ -74,7 +74,7 @@ var (
 type (
 	PNGImage  pngStruct   // PNGImage为PNG图像结构
 	Chunk     chunkStruct // Chunk为PNG图像的块结构
-	Chunks    []Chunk
+	Chunks    []*Chunk
 	ChunkData []byte      // 块数据
 	CRC32     []byte      // 循环冗余检测数据
 	Header    []byte      // 头数据
@@ -82,6 +82,16 @@ type (
 	IDATS     []ImageData // 图像数据(PNG可能会有多个IDAT块)
 	PNGBODY   []byte      // 整个PNG文件的数据
 )
+
+type IHDR struct {
+	width             uint32 // 宽度
+	height            uint32 // 高度
+	bitdepth          uint8  // 颜色位深度
+	colorType         uint8  // 颜色类型
+	compressionMethod uint8  // 压缩方法
+	filterMethod      uint8  // 滤波器方法
+	interlaceMethod   uint8  // 交错方法
+}
 
 // PNG 图像的二进制数据实际上是以文件头 file header 以及 chunk 块组合而成。
 // 块数据的以大端序在组成，分别为：Length,ChunkType，Data，CRC四个元素组成。
@@ -190,9 +200,44 @@ func (img *PNGImage) listToChunks(l *list.List) {
 	img.Chunks = make(Chunks, l.Len())
 	for i := 0; i < l.Len(); i++ {
 		elm := l.Front()
-		obj, _ := (elm.Value).(Chunk)
-		img.Chunks[i] = Chunk(obj)
+		obj, _ := (elm.Value).(*Chunk)
+		img.Chunks[i] = obj
 	}
+}
+
+func (img *PNGImage) GetPNGIHDR() (*IHDR, error) {
+	if len(img.Chunks) < 1 || img.Chunks[0].ChunkType != CIHDR {
+		return nil, errors.New(CIHDR + " errors")
+	}
+	d := img.Chunks[0].Data
+	if d == nil {
+		return nil, errors.New(CIHDR + " its nil")
+	}
+	if len(d) != 13 {
+		return nil, errors.New(CIHDR + " data length error")
+	}
+	w, e := getUint32(PNGBODY(d[0:4]))
+	if e != nil {
+		return nil, e
+	}
+	h, e := getUint32(PNGBODY(d[4:8]))
+	if e != nil {
+		return nil, e
+	}
+	var p = make([]uint8, 5)
+	for i, j := 8, 0; i < len(d); i++ {
+		p[j] = d[i]
+		j++
+	}
+	return &IHDR{
+		width:             uint32(w),
+		height:            uint32(h),
+		bitdepth:          p[0],
+		colorType:         p[1],
+		compressionMethod: p[2],
+		filterMethod:      p[3],
+		interlaceMethod:   p[4],
+	}, nil
 }
 
 // getUint32 获取二进制数据中以大端序存放的Uint32类型数据
@@ -373,4 +418,59 @@ func (img *PNGImage) loadAllBytes(rd *bufio.Reader, size int) PNGBODY {
 		}
 	}
 	return p
+}
+
+func (hdr *IHDR) GetWidth() int {
+	return int(hdr.width)
+}
+func (hdr *IHDR) SetWidth(w int) {
+	hdr.width = uint32(w)
+}
+
+func (hdr *IHDR) GetHeight() int {
+	return int(hdr.height)
+}
+
+func (hdr *IHDR) SetHeight(h int) {
+	hdr.height = uint32(h)
+}
+
+func (hdr *IHDR) GetBits() int {
+	return int(hdr.bitdepth)
+}
+
+func (hdr *IHDR) SetBits(b int) {
+	hdr.bitdepth = uint8(b)
+}
+
+func (hdr *IHDR) GetColorType() int {
+	return int(hdr.colorType)
+}
+
+func (hdr *IHDR) SetColorType(ct int) {
+	hdr.colorType = uint8(ct)
+}
+
+func (hdr *IHDR) GetCompressionMethod() int {
+	return int(hdr.compressionMethod)
+}
+
+func (hdr *IHDR) SetCompressionMethod(cpm int) {
+	hdr.compressionMethod = uint8(cpm)
+}
+
+func (hdr *IHDR) GetFilterMethod() int {
+	return int(hdr.filterMethod)
+}
+
+func (hdr *IHDR) SetFilterMethod(fltrm int) {
+	hdr.filterMethod = uint8(fltrm)
+}
+
+func (hdr *IHDR) GetInterlaceMethod() int {
+	return int(hdr.interlaceMethod)
+}
+
+func (hdr *IHDR) SetInterlaceMethod(iterm int) {
+	hdr.interlaceMethod = uint8(iterm)
 }
