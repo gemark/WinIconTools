@@ -1,4 +1,4 @@
-module WinIconTools
+module github.com/gemark/WinIconTools
 
 go 1.12
 
